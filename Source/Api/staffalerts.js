@@ -22,7 +22,6 @@ function bugEmbed(report) {
         .setDescription(report.message.slice(0, 4000))
         .addFields(
             { name: 'Joueur', value: report.reporter.username, inline: true },
-            { name: 'username du joueur', value: report.reporter.name, inline: true },
             { name: 'Page', value: report.page ? "https://wikideck.app" + report.page : 'n/a', inline: true },
         )
         .setTimestamp(new Date(report.createdAt));
