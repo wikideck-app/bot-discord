@@ -5,11 +5,9 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('ticketpannel')
         .setDescription('Envoi le panneau de tickets.')
-        // Masque la commande aux non-admins dans Discord (modifiable ensuite dans Paramètres > Intégrations)
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-        .setContexts(0), // 0 = serveur uniquement (pas en MP)
+        .setContexts(0), 
     async execute(interaction) {
-        // Vérification côté code : les permissions Discord peuvent être modifiées par les admins du serveur
         if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
             await interaction.reply({ content: 'Cette commande est réservée aux administrateurs.', flags: MessageFlags.Ephemeral });
             return;

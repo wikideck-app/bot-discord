@@ -1,10 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-/**
-* Force le chargement de toutes les commandes (utilisé uniquement en phase de test pour index et deploy-command)
-* 
- */
 function getCommandFiles(dir) {
 	let files = [];
 	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

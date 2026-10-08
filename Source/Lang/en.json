@@ -1,0 +1,16 @@
+{
+
+	"language.set": "The language has been set to: {locale}",
+	
+
+	"ticket.created": "Your ticket has been created: {channel}",
+	"ticket.alreadyOpen": "You already have an open ticket: {channel}",
+	"ticket.close": "Close the ticket",
+	"ticket.cannotClose": "You cannot close this ticket.",
+
+	"ticket.openedDescription": "Describe your issue, the team will respond soon. (please provide as much detail as possible to facilitate the resolution of your issue.)",
+	"ticket.reportedDescription": "Hey,\n please provide detailed information about the encountered bug! (steps, screenshots...), the team will take a look soon.\n\n *no need to spam us with pings, 1 ping may be acceptable if the bug is major, otherwise no need, don't worry we have seen your ticket.*"
+	
+	
+	
+}

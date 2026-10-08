@@ -1,18 +1,14 @@
-// Require the necessary discord.js classes
+
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, MessageFlags } = require('discord.js');
 const { DISCORD_TOKEN: token } = require('dotenv').config().parsed;
 const { getCommandFiles } = require('./Source/Helper/loadCommands');
 
-// Create a new client instance
-// GuildMembers est nécessaire pour recevoir l'évènement GuildMemberAdd (message de bienvenue).
-// Pensez à activer l'intent privilégié "Server Members Intent" sur le portail développeur Discord.
+
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 
-// When the client is ready, run this code (only once).
-// The distinction between `client: Client<boolean>` and `readyClient: Client<true>` is important for TypeScript developers.
-// It makes some properties non-nullable.
+
 client.once(Events.ClientReady, (readyClient) => {
 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
     client.commands = new Collection(); 
@@ -52,9 +48,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 		await command.execute(interaction);
 	} catch (error) {
 		console.error(error);
-		// Cette réponse de secours peut elle-même échouer (ex: interaction expirée).
-		// On l'isole dans son propre try/catch pour ne jamais laisser une erreur
-		// Discord non gérée remonter et planter tout le bot.
+
 		try {
 			if (interaction.replied || interaction.deferred) {
 				await interaction.followUp({
@@ -73,7 +67,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 	}
 });
 
-// Filets de sécurité globaux : logguer au lieu de laisser le process planter silencieusement.
+// sécurité globale
 client.on(Events.Error, (error) => {
 	console.error('[ERROR] Erreur du client Discord :', error);
 });
@@ -81,6 +75,6 @@ process.on('unhandledRejection', (reason) => {
 	console.error('[ERROR] Promesse rejetée non gérée :', reason);
 });
 
-// Log in to Discord with your client's token
+
 
 client.login(token);

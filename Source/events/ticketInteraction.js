@@ -1,7 +1,6 @@
 const { Events, MessageFlags } = require('discord.js');
 const { TICKET_OPEN_ID, TICKET_CLOSE_ID, TICKET_REPORT_ID, openTicket, reportTicket, closeTicket } = require('../Helper/ticket');
 
-// Reçoit les clics sur les boutons du système de tickets. Les slash commands restent gérées dans index.js.
 module.exports = {
 	name: Events.InteractionCreate,
 	once: false,

@@ -1,4 +1,6 @@
 const path = require('node:path');
+const db = require('./database.js');
+const { t } = require('./i18n.js');
 const {
 	ActionRowBuilder,
 	AttachmentBuilder,
@@ -10,16 +12,17 @@ const {
 	PermissionFlagsBits,
 } = require('discord.js');
 
-// Les customId sont préfixés par "ticket:" pour que l'event sache quelles interactions le concernent
+
 const TICKET_OPEN_ID = 'ticket:open';
 const TICKET_CLOSE_ID = 'ticket:close';
 const TICKET_REPORT_ID = 'ticket:report';
+let TICKET_NUMBER_ID = db.prepare('SELECT * FROM ticket ORDER BY id DESC LIMIT 1').get()?.id ?? 0;
 const CLOSE_DELAY_MS = 5000;
 const MAX_TRANSCRIPT_MESSAGES = 1000;
 const TICKET_BANNER_PATH = path.join(__dirname, '..', 'Assets', 'ticket-banner.png');
 
 function buildPanel() {
-	// Discord ne peut pas lire un chemin local : on joint le fichier et on le référence via attachment://
+
 	const banner = new AttachmentBuilder(TICKET_BANNER_PATH, { name: 'ticket-banner.png' });
 	const embed = new EmbedBuilder()
 		.setColor(0x5865F2)
@@ -31,37 +34,43 @@ function buildPanel() {
 	return { embeds: [embed], components: [row], files: [banner] };
 }
 
-// Le topic du salon stocke le type et l'ID du créateur : il sert à retrouver le propriétaire sans base de données
+
 function ticketTopic(kind, userId) {
 	return `ticket:${kind}:${userId}`;
 }
 
-// Extrait { kind, userId } d'un topic de salon, ou null si ce n'est pas un salon de ticket
+function getLocale(userId) {
+	const user = db.prepare('SELECT * FROM User WHERE user_id = ?').get(userId);
+	return user?.locale ?? 'fr';
+}
+
+
 function parseTicketTopic(topic) {
 	const match = /^ticket:(open|report):(\d+)$/.exec(topic ?? '');
 	if (!match) return null;
 	return { kind: match[1], userId: match[2] };
 }
 
-// Config commune à "Ouvrir un ticket" et "Rapporter un Bug" : seuls la catégorie, le préfixe et le message changent
+
 const TICKET_KINDS = {
 	open: {
 		envVar: 'TICKET_CATEGORY_ID',
 		namePrefix: 'ticket',
-		description: 'Décris ton problème, l\'équipe te répondra bientôt.',
+		descriptionKey: 'ticket.openedDescription',
 	},
 	report: {
 		envVar: 'TICKET_REPORT_CATEGORY_ID',
 		namePrefix: 'report',
-		description: 'Décris le bug rencontré (étapes, capture d\'écran...), l\'équipe y jettera un oeil bientôt.',
+		descriptionKey: 'ticket.reportedDescription',
 	},
 };
 
 async function createTicket(interaction, kind) {
 	await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-	const { envVar, namePrefix, description } = TICKET_KINDS[kind];
+	const { envVar, namePrefix, descriptionKey } = TICKET_KINDS[kind];
 	const { guild, user } = interaction;
+	const locale = getLocale(user.id);
 	const categoryId = process.env[envVar];
 	if (!categoryId) {
 		await interaction.editReply(`${envVar} n'est pas défini dans le fichier .env.`);
@@ -70,12 +79,12 @@ async function createTicket(interaction, kind) {
 
 	const existing = guild.channels.cache.find((c) => c.parentId === categoryId && c.topic === ticketTopic(kind, user.id));
 	if (existing) {
-		await interaction.editReply(`Tu as déjà un ticket ouvert : ${existing}`);
+		await interaction.editReply(t('ticket.alreadyOpen', locale, { channel: existing }));
 		return;
 	}
 
 	const channel = await guild.channels.create({
-		name: `${namePrefix}-${user.username}`,
+		name: `${namePrefix}-${user.username}-${TICKET_NUMBER_ID++}`,
 		type: ChannelType.GuildText,
 		parent: categoryId,
 		topic: ticketTopic(kind, user.id),
@@ -93,15 +102,16 @@ async function createTicket(interaction, kind) {
 	});
 
 	const row = new ActionRowBuilder().addComponents(
-		new ButtonBuilder().setCustomId(TICKET_CLOSE_ID).setLabel('Fermer le ticket').setEmoji('🔒').setStyle(ButtonStyle.Danger),
+		new ButtonBuilder().setCustomId(TICKET_CLOSE_ID).setLabel(t('ticket.close', locale)).setEmoji('🔒').setStyle(ButtonStyle.Danger),
 	);
 	await channel.send({
 		content: `${user}`,
-		embeds: [new EmbedBuilder().setColor(0x5865F2).setDescription(description)],
+		embeds: [new EmbedBuilder().setColor(0x5865F2).setDescription(t(descriptionKey, locale))],
 		components: [row],
 	});
 
-	await interaction.editReply(`Ton ticket a été créé : ${channel}`);
+	await interaction.editReply(t('ticket.created', locale, { channel }));
+	db.prepare('INSERT INTO ticket (name, kind, user_id) VALUES (?, ?, ?)').run(channel.name, kind, user.id);
 }
 
 async function openTicket(interaction) {
@@ -136,7 +146,7 @@ async function closeTicket(interaction) {
 	const isOwner = parseTicketTopic(channel.topic)?.userId === user.id;
 	const isStaff = memberPermissions.has(PermissionFlagsBits.ManageChannels);
 	if (!isOwner && !isStaff) {
-		await interaction.reply({ content: 'Tu ne peux pas fermer ce ticket.', flags: MessageFlags.Ephemeral });
+		await interaction.reply({ content: t('ticket.cannotClose', getLocale(user.id)), flags: MessageFlags.Ephemeral });
 		return;
 	}
 
@@ -151,11 +161,12 @@ async function closeTicket(interaction) {
 			await transcriptChannel.send({ content: `Transcript de **${channel.name}** (fermé par ${user.tag})`, files: [file] });
 		}
 	}
-
+	
 	await interaction.editReply(`Ticket fermé, ce salon sera supprimé dans ${CLOSE_DELAY_MS / 1000} secondes.`);
 	setTimeout(() => {
 		channel.delete('Ticket fermé').catch((error) => console.error('[ERROR] Suppression du ticket impossible :', error));
 	}, CLOSE_DELAY_MS);
+	db.prepare('UPDATE ticket SET isClosed = TRUE WHERE name = ?').run(channel.name);
 }
 
 module.exports = { TICKET_OPEN_ID, TICKET_CLOSE_ID, TICKET_REPORT_ID, buildPanel, openTicket, reportTicket, closeTicket };

@@ -1,0 +1,15 @@
+{
+
+	"language.set": "La langue a été définie sur : {locale}",
+
+
+	"ticket.created": "Ton ticket a été créé : {channel}",
+	"ticket.alreadyOpen": "Tu as déjà un ticket ouvert : {channel}",
+	"ticket.close": "Fermer le ticket",
+	"ticket.cannotClose": "Tu ne peux pas fermer ce ticket.",
+
+	"ticket.openedDescription": "Décris ton problème, l'équipe te répondra bientôt. (merci de fournir un maximum de détails afin de faciliter la résolution de ton problème.)",
+	"ticket.reportedDescription": "Hey,\n merci de bien vouloir détailler le bug rencontré !(étapes, capture d'écran...), l'équipe y jettera un oeil bientôt.\n\n *pas besoin de nous spam de ping 1 ping peu être acceptable si le bug est majeur sinon pas besoin ne t'inquiète pas on a vu ton ticket.*"
+	
+	
+}
