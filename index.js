@@ -4,6 +4,7 @@ const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, MessageFlags } = require('discord.js');
 const { DISCORD_TOKEN: token } = require('dotenv').config().parsed;
 const { getCommandFiles } = require('./Source/Helper/loadCommands');
+const { initDatabase } = require('./Source/Helper/database');
 
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
@@ -75,6 +76,10 @@ process.on('unhandledRejection', (reason) => {
 	console.error('[ERROR] Promesse rejetée non gérée :', reason);
 });
 
-
-
-client.login(token);
+// On crée les tables MySQL avant de connecter le bot, pour que toute requête lancée après le login trouve un schéma prêt.
+initDatabase()
+	.then(() => client.login(token))
+	.catch((error) => {
+		console.error('[ERROR] Impossible de se connecter à la base de données MySQL :', error);
+		process.exit(1);
+	});
