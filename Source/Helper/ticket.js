@@ -1,5 +1,5 @@
 const path = require('node:path');
-const db = require('./database.js');
+const { pool } = require('./database.js');
 const { t } = require('./i18n.js');
 const {
 	ActionRowBuilder,
@@ -16,7 +16,9 @@ const {
 const TICKET_OPEN_ID = 'ticket:open';
 const TICKET_CLOSE_ID = 'ticket:close';
 const TICKET_REPORT_ID = 'ticket:report';
-let TICKET_NUMBER_ID = db.prepare('SELECT * FROM ticket ORDER BY id DESC LIMIT 1').get()?.id ?? 0;
+// MySQL étant asynchrone, le compteur ne peut plus être initialisé de façon synchrone au chargement du module :
+// il est chargé une seule fois, de façon paresseuse, via ensureTicketNumberLoaded().
+let TICKET_NUMBER_ID = null;
 const CLOSE_DELAY_MS = 5000;
 const MAX_TRANSCRIPT_MESSAGES = 1000;
 const TICKET_BANNER_PATH = path.join(__dirname, '..', 'Assets', 'ticket-banner.png');
@@ -35,13 +37,20 @@ function buildPanel() {
 }
 
 
+async function ensureTicketNumberLoaded() {
+	if (TICKET_NUMBER_ID === null) {
+		const [rows] = await pool.query('SELECT id FROM ticket ORDER BY id DESC LIMIT 1');
+		TICKET_NUMBER_ID = rows[0]?.id ?? 0;
+	}
+}
+
 function ticketTopic(kind, userId) {
 	return `ticket:${kind}:${userId}`;
 }
 
-function getLocale(userId) {
-	const user = db.prepare('SELECT * FROM User WHERE user_id = ?').get(userId);
-	return user?.locale ?? 'fr';
+async function getLocale(userId) {
+	const [rows] = await pool.query('SELECT * FROM `User` WHERE user_id = ?', [userId]);
+	return rows[0]?.locale ?? 'fr';
 }
 
 
@@ -67,10 +76,11 @@ const TICKET_KINDS = {
 
 async function createTicket(interaction, kind) {
 	await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+	await ensureTicketNumberLoaded();
 
 	const { envVar, namePrefix, descriptionKey } = TICKET_KINDS[kind];
 	const { guild, user } = interaction;
-	const locale = getLocale(user.id);
+	const locale = await getLocale(user.id);
 	const categoryId = process.env[envVar];
 	if (!categoryId) {
 		await interaction.editReply(`${envVar} n'est pas défini dans le fichier .env.`);
@@ -111,7 +121,7 @@ async function createTicket(interaction, kind) {
 	});
 
 	await interaction.editReply(t('ticket.created', locale, { channel }));
-	db.prepare('INSERT INTO ticket (name, kind, user_id) VALUES (?, ?, ?)').run(channel.name, kind, user.id);
+	await pool.query('INSERT INTO ticket (name, kind, user_id) VALUES (?, ?, ?)', [channel.name, kind, user.id]);
 }
 
 async function openTicket(interaction) {
@@ -146,7 +156,7 @@ async function closeTicket(interaction) {
 	const isOwner = parseTicketTopic(channel.topic)?.userId === user.id;
 	const isStaff = memberPermissions.has(PermissionFlagsBits.ManageChannels);
 	if (!isOwner && !isStaff) {
-		await interaction.reply({ content: t('ticket.cannotClose', getLocale(user.id)), flags: MessageFlags.Ephemeral });
+		await interaction.reply({ content: t('ticket.cannotClose', await getLocale(user.id)), flags: MessageFlags.Ephemeral });
 		return;
 	}
 
@@ -166,7 +176,7 @@ async function closeTicket(interaction) {
 	setTimeout(() => {
 		channel.delete('Ticket fermé').catch((error) => console.error('[ERROR] Suppression du ticket impossible :', error));
 	}, CLOSE_DELAY_MS);
-	db.prepare('UPDATE ticket SET isClosed = TRUE WHERE name = ?').run(channel.name);
+	await pool.query('UPDATE ticket SET isClosed = TRUE WHERE name = ?', [channel.name]);
 }
 
 module.exports = { TICKET_OPEN_ID, TICKET_CLOSE_ID, TICKET_REPORT_ID, buildPanel, openTicket, reportTicket, closeTicket };

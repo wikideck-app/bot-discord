@@ -5,8 +5,6 @@ node_modules/
 config.json
 .env.local
 .env
-Source/Helper/database.js
-Source/Helper/wikideckApi.js
 
 # Ignore la base de données locale (contient des données, pas du code)
 *.db
