@@ -1,7 +1,8 @@
 // envoi des commandes slash au serveur Discord pour éviter de relancer le bot
 
 const { REST, Routes } = require('discord.js');
-const { CLIENT_ID: clientId, GUILD_ID: guildId, DISCORD_TOKEN: token } = require('dotenv').config().parsed;
+require('dotenv').config();
+const { CLIENT_ID: clientId, GUILD_ID: guildId, DISCORD_TOKEN: token } = process.env;
 const path = require('node:path');
 const { getCommandFiles } = require('./Source/helper/loadCommands');
 

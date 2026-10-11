@@ -2,7 +2,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, MessageFlags } = require('discord.js');
-const { DISCORD_TOKEN: token } = require('dotenv').config().parsed;
+require('dotenv').config();
+const { DISCORD_TOKEN: token } = process.env;
 const { getCommandFiles } = require('./Source/helper/loadCommands');
 const { initDatabase } = require('./Source/helper/database');
 
