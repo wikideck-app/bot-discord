@@ -1,5 +1,6 @@
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const path = require('node:path');
+const { SANS_FONT } = require('./fonts.js');
 
 const BANNER_PATH = path.join(__dirname, '..', 'assets', 'welcome-banner.png');
 const BANNER_WIDTH = 1500;
@@ -31,10 +32,10 @@ function roundRect(ctx, x, y, width, height, radius) {
  */
 function fitText(ctx, text, maxWidth, initialSize) {
 	let size = initialSize;
-	ctx.font = `bold ${size}px sans-serif`;
+	ctx.font = `bold ${size}px ${SANS_FONT}`;
 	while (ctx.measureText(text).width > maxWidth && size > 12) {
 		size -= 1;
-		ctx.font = `bold ${size}px sans-serif`;
+		ctx.font = `bold ${size}px ${SANS_FONT}`;
 	}
 	return size;
 }
@@ -67,7 +68,7 @@ async function generateWelcomeImage(member) {
 	const maxTextWidth = PSEUDO_PILL.width - padding;
 	let pseudo = `${member.displayName}`;
 	const fontSize = fitText(ctx, pseudo, maxTextWidth, 26);
-	ctx.font = `bold ${fontSize}px sans-serif`;
+	ctx.font = `bold ${fontSize}px ${SANS_FONT}`;
 	// Si le pseudo est trop long même avec la plus petite police, on le tronque
 	while (ctx.measureText(pseudo).width > maxTextWidth && pseudo.length > 1) {
 		pseudo = `${pseudo.slice(0, -2)}…`;

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, AttachmentBuilder } = require('discord.js');
 const { getWelcomeChannel } = require('../../helper/welcomeChannel');
 const { generateWelcomeImage } = require('../../helper/welcomeImage');
 
@@ -6,6 +6,7 @@ const { generateWelcomeImage } = require('../../helper/welcomeImage');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('testwelcome')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .setDescription('simule un nouvel utilisateur rejoignant le serveur'),
     async execute(interaction) {
         const member = interaction.member;
