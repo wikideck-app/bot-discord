@@ -10,6 +10,13 @@
 	"market.alert.endsAt": "Fin",
 	"market.alert.price": "{amount} wikibits",
 
+	"market.intro.title": "Alertes de ta liste d'envies",
+	"market.intro.description": "Je t'enverrai un message privé dès qu'une carte de ta liste d'envies Wikideck sera mise aux enchères.\n\nTon profil Wikideck doit être public pour que je puisse voir ta liste d'envies. Tu peux désactiver ces alertes à tout moment avec le bouton ci-dessous.",
+	"market.button.disable": "Désactiver les alertes",
+	"market.button.enable": "Réactiver les alertes",
+	"market.disabled": "Alertes désactivées, tu ne recevras plus de message pour ta liste d'envies.",
+	"market.enabled": "Alertes réactivées, je te préviendrai dès qu'une carte de ta liste d'envies sera mise aux enchères.",
+
 
 	"ticket.created": "Ton ticket a été créé : {channel}",
 	"ticket.alreadyOpen": "Tu as déjà un ticket ouvert : {channel}",

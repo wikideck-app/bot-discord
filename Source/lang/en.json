@@ -9,6 +9,13 @@
 	"market.alert.seller": "Seller",
 	"market.alert.endsAt": "Ends",
 	"market.alert.price": "{amount} wikibits",
+
+	"market.intro.title": "Wishlist alerts",
+	"market.intro.description": "I'll send you a direct message as soon as a card from your Wikideck wishlist is put up for auction.\n\nYour Wikideck profile must be public so I can see your wishlist. You can turn these alerts off at any time with the button below.",
+	"market.button.disable": "Turn off alerts",
+	"market.button.enable": "Turn alerts back on",
+	"market.disabled": "Alerts turned off, you won't get messages about your wishlist anymore.",
+	"market.enabled": "Alerts turned back on, I'll let you know as soon as a card from your wishlist is put up for auction.",
 	
 
 	"ticket.created": "Your ticket has been created: {channel}",

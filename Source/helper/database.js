@@ -77,7 +77,6 @@ async function initDatabase() {
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
 	`);
-	// copie des wishlists Wikideck (profils publics) des joueurs ayant un profil bot, remplie par marketAlerts.js
 	await pool.query(`
 		CREATE TABLE IF NOT EXISTS market_watch (
 			user_id BIGINT NOT NULL,
@@ -92,6 +91,13 @@ async function initDatabase() {
 			auction_id VARCHAR(255) NOT NULL,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY (user_id, auction_id)
+		);
+	`);
+	await pool.query(`
+		CREATE TABLE IF NOT EXISTS market_subscription (
+			user_id BIGINT NOT NULL PRIMARY KEY,
+			enabled BOOLEAN NOT NULL DEFAULT TRUE,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
 	`);
 }
