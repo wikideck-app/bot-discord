@@ -8,14 +8,20 @@ const CHECK_INTERVAL_MS = 60 * 1000;
 const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 const CANNOT_DM_CODE = 50007;
 const EMBED_COLOR = 0xFF3D7F;
+const REFRESH_WISHLIST_ID = 'market:refresh';
 const DISABLE_ALERTS_ID = 'market:disable';
 const ENABLE_ALERTS_ID = 'market:enable';
 
 function alertsButtonRow(enabled, locale) {
-	const button = enabled
-		? new ButtonBuilder().setCustomId(DISABLE_ALERTS_ID).setLabel(t('market.button.disable', locale)).setStyle(ButtonStyle.Secondary)
-		: new ButtonBuilder().setCustomId(ENABLE_ALERTS_ID).setLabel(t('market.button.enable', locale)).setStyle(ButtonStyle.Success);
-	return new ActionRowBuilder().addComponents(button);
+	if (!enabled) {
+		return new ActionRowBuilder().addComponents(
+			new ButtonBuilder().setCustomId(ENABLE_ALERTS_ID).setLabel(t('market.button.enable', locale)).setStyle(ButtonStyle.Success),
+		);
+	}
+	return new ActionRowBuilder().addComponents(
+		new ButtonBuilder().setCustomId(REFRESH_WISHLIST_ID).setLabel(t('market.button.refresh', locale)).setStyle(ButtonStyle.Primary),
+		new ButtonBuilder().setCustomId(DISABLE_ALERTS_ID).setLabel(t('market.button.disable', locale)).setStyle(ButtonStyle.Secondary),
+	);
 }
 
 async function getLinkedAccounts(client) {
@@ -175,20 +181,63 @@ async function checkMarket(client) {
 	}
 }
 
-async function toggleAlerts(interaction) {
-	const enabled = interaction.customId === ENABLE_ALERTS_ID;
-	const userId = interaction.user.id;
+function wishlistEmbed(visible, cards, locale) {
+	let description;
+	if (!visible) {
+		description = t('market.wishlist.private', locale);
+	} else if (cards.length === 0) {
+		description = t('market.wishlist.empty', locale);
+	} else {
+		const lines = cards.map((card) => `• ${card.title}`);
+		description = [t('market.wishlist.cards', locale, { count: String(cards.length) }), ...lines].join('\n');
+	}
+	return new EmbedBuilder().setColor(EMBED_COLOR).setTitle(t('market.wishlist.title', locale)).setDescription(description);
+}
+
+async function wishlistReply(userId) {
+	const locale = await getLocale(userId);
+	const account = await api.staff.findByDiscordId(userId);
+	if (!account || account.banned) return { content: t('market.wishlist.notLinked', locale) };
+
+	await pool.query('INSERT IGNORE INTO market_subscription (user_id) VALUES (?)', [userId]);
+	const [[subscription]] = await pool.query('SELECT enabled FROM market_subscription WHERE user_id = ?', [userId]);
+	if (!subscription.enabled) {
+		return { content: t('market.wishlist.disabled', locale), components: [alertsButtonRow(false, locale)] };
+	}
+
+	const profile = await api.players.profile(account.id);
+	const cards = profile.visible ? profile.wishlist : [];
+	await saveWishlist(userId, cards.map((card) => card.id));
+	return { embeds: [wishlistEmbed(profile.visible, cards, locale)], components: [alertsButtonRow(true, locale)] };
+}
+
+async function setAlertsEnabled(userId, enabled) {
 	await pool.query(
 		'INSERT INTO market_subscription (user_id, enabled) VALUES (?, ?) ON DUPLICATE KEY UPDATE enabled = ?',
 		[userId, enabled, enabled],
 	);
 	if (!enabled) await pool.query('DELETE FROM market_watch WHERE user_id = ?', [userId]);
+}
 
-	const locale = await getLocale(userId);
-	await interaction.reply({
-		content: t(enabled ? 'market.enabled' : 'market.disabled', locale),
-		components: [alertsButtonRow(enabled, locale)],
-	});
+async function handleMarketButton(interaction) {
+	const userId = interaction.user.id;
+	await interaction.deferReply();
+
+	if (interaction.customId === DISABLE_ALERTS_ID) {
+		await setAlertsEnabled(userId, false);
+		const locale = await getLocale(userId);
+		await interaction.editReply({ content: t('market.disabled', locale), components: [alertsButtonRow(false, locale)] });
+		return;
+	}
+
+	if (interaction.customId === ENABLE_ALERTS_ID) {
+		await setAlertsEnabled(userId, true);
+		const locale = await getLocale(userId);
+		await interaction.editReply({ content: t('market.enabled', locale), ...(await wishlistReply(userId)) });
+		return;
+	}
+
+	await interaction.editReply(await wishlistReply(userId));
 }
 
 function schedule(task, label, intervalMs) {
@@ -219,4 +268,13 @@ function startMarketAlerts(client) {
 	check.start();
 }
 
-module.exports = { DISABLE_ALERTS_ID, ENABLE_ALERTS_ID, startMarketAlerts, syncWishlists, checkMarket, toggleAlerts };
+module.exports = {
+	REFRESH_WISHLIST_ID,
+	DISABLE_ALERTS_ID,
+	ENABLE_ALERTS_ID,
+	startMarketAlerts,
+	syncWishlists,
+	checkMarket,
+	wishlistReply,
+	handleMarketButton,
+};

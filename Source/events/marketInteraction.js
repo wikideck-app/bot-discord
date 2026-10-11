@@ -1,15 +1,16 @@
 const { Events } = require('discord.js');
-const { DISABLE_ALERTS_ID, ENABLE_ALERTS_ID, toggleAlerts } = require('../api/marketAlerts');
+const { REFRESH_WISHLIST_ID, DISABLE_ALERTS_ID, ENABLE_ALERTS_ID, handleMarketButton } = require('../api/marketAlerts');
+
+const MARKET_BUTTON_IDS = [REFRESH_WISHLIST_ID, DISABLE_ALERTS_ID, ENABLE_ALERTS_ID];
 
 module.exports = {
 	name: Events.InteractionCreate,
 	once: false,
 	async execute(interaction) {
-		if (!interaction.isButton()) return;
-		if (interaction.customId !== DISABLE_ALERTS_ID && interaction.customId !== ENABLE_ALERTS_ID) return;
+		if (!interaction.isButton() || !MARKET_BUTTON_IDS.includes(interaction.customId)) return;
 
 		try {
-			await toggleAlerts(interaction);
+			await handleMarketButton(interaction);
 		} catch (error) {
 			console.error('[ERROR] Bouton des alertes marché en échec :', error);
 		}

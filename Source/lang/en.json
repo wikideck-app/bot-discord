@@ -12,10 +12,17 @@
 
 	"market.intro.title": "Wishlist alerts",
 	"market.intro.description": "I'll send you a direct message as soon as a card from your Wikideck wishlist is put up for auction.\n\nYour Wikideck profile must be public so I can see your wishlist. You can turn these alerts off at any time with the button below.",
+	"market.button.refresh": "Refresh my wishlist",
 	"market.button.disable": "Turn off alerts",
 	"market.button.enable": "Turn alerts back on",
 	"market.disabled": "Alerts turned off, you won't get messages about your wishlist anymore.",
 	"market.enabled": "Alerts turned back on, I'll let you know as soon as a card from your wishlist is put up for auction.",
+	"market.wishlist.title": "Your wishlist",
+	"market.wishlist.cards": "{count} card(s) watched:",
+	"market.wishlist.empty": "Your wishlist is empty.",
+	"market.wishlist.private": "Your Wikideck profile is private, I can't see your wishlist.",
+	"market.wishlist.notLinked": "Your Discord account isn't linked to a Wikideck account.",
+	"market.wishlist.disabled": "Your alerts are turned off.",
 	
 
 	"ticket.created": "Your ticket has been created: {channel}",
