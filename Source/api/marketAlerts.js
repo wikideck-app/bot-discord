@@ -1,7 +1,7 @@
 const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const { pool } = require('../Helper/database.js');
-const { t } = require('../Helper/i18n.js');
-const { generateCardImage } = require('../Helper/cardImage.js');
+const { pool } = require('../helper/database.js');
+const { t } = require('../helper/i18n.js');
+const { generateCardImage } = require('../helper/cardImage.js');
 const api = require('./wikideckApi.js');
 
 const CHECK_INTERVAL_MS = 60 * 1000;

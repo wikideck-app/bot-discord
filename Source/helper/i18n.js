@@ -1,5 +1,5 @@
-const fr = require('../Lang/fr.json');
-const en = require('../Lang/en.json');
+const fr = require('../lang/fr.json');
+const en = require('../lang/en.json');
 
 const locales = { fr, en };
 const DEFAULT_LOCALE = 'fr';

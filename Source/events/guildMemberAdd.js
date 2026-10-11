@@ -1,7 +1,7 @@
 const { Events, AttachmentBuilder } = require('discord.js');
-const { getWelcomeChannel } = require('../Helper/welcomeChannel');
-const { generateWelcomeImage } = require('../Helper/welcomeImage');
-const { syncUserAccount } = require('../Helper/userAccount');
+const { getWelcomeChannel } = require('../helper/welcomeChannel');
+const { generateWelcomeImage } = require('../helper/welcomeImage');
+const { syncUserAccount } = require('../helper/userAccount');
 
 module.exports = {
 	name: Events.GuildMemberAdd,

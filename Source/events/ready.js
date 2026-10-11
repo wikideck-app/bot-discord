@@ -1,6 +1,6 @@
 const { Events } = require('discord.js');
-const { startStaffAlerts } = require('../Api/staffalerts');
-const { startMarketAlerts } = require('../Api/marketAlerts');
+const { startStaffAlerts } = require('../api/staffalerts');
+const { startMarketAlerts } = require('../api/marketAlerts');
 
 module.exports = {
     name: Events.ClientReady,

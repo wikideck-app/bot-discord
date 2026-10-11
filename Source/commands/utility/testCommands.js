@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
-const { getWelcomeChannel } = require('../../Helper/welcomeChannel');
-const { generateWelcomeImage } = require('../../Helper/welcomeImage');
+const { getWelcomeChannel } = require('../../helper/welcomeChannel');
+const { generateWelcomeImage } = require('../../helper/welcomeImage');
 
 // simuler un user qui join avec une commande et l'envoyer dans le salon de bienvenue avec les pararmètre d'embed actuel du guildMemberAdd event
 module.exports = {

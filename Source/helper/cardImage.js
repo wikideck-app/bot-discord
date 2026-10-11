@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 
-const TEMPLATE_PATH = path.join(__dirname, '..', 'Assets', 'card-template.png');
+const TEMPLATE_PATH = path.join(__dirname, '..', 'assets', 'card-template.png');
 const DEFAULT_SIZE = { width: 680, height: 960 };
 
 const ZONES = {

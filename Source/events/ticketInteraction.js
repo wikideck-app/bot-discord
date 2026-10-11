@@ -1,5 +1,5 @@
 const { Events, MessageFlags } = require('discord.js');
-const { TICKET_OPEN_ID, TICKET_CLOSE_ID, TICKET_REPORT_ID, openTicket, reportTicket, closeTicket } = require('../Helper/ticket');
+const { TICKET_OPEN_ID, TICKET_CLOSE_ID, TICKET_REPORT_ID, openTicket, reportTicket, closeTicket } = require('../helper/ticket');
 
 module.exports = {
 	name: Events.InteractionCreate,

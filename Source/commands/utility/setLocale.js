@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
-const { pool } = require('../../Helper/database.js');
-const { t } = require('../../Helper/i18n.js');
+const { pool } = require('../../helper/database.js');
+const { t } = require('../../helper/i18n.js');
 
 module.exports = {
     data: new SlashCommandBuilder()

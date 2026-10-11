@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
-const { buildPanel } = require('../../Helper/ticket');
+const { buildPanel } = require('../../helper/ticket');
 
 module.exports = {
     data: new SlashCommandBuilder()

@@ -1,11 +1,11 @@
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const path = require('node:path');
 
-const BANNER_PATH = path.join(__dirname, '..', 'Assets', 'welcome-banner.png');
+const BANNER_PATH = path.join(__dirname, '..', 'assets', 'welcome-banner.png');
 const BANNER_WIDTH = 1500;
 const BANNER_HEIGHT = 500;
 
-// Coordonnées mesurées directement sur Source/Assets/welcome-banner.png
+// Coordonnées mesurées directement sur Source/assets/welcome-banner.png
 const AVATAR = { x: 249.6, y: 249.4, radius: 129 };
 const PSEUDO_PILL = { x: 700, y: 120, width: 226, height: 42, radius: 21, fill: '#2d3c75' };
 

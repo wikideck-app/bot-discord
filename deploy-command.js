@@ -3,7 +3,7 @@
 const { REST, Routes } = require('discord.js');
 const { CLIENT_ID: clientId, GUILD_ID: guildId, DISCORD_TOKEN: token } = require('dotenv').config().parsed;
 const path = require('node:path');
-const { getCommandFiles } = require('./Source/Helper/loadCommands');
+const { getCommandFiles } = require('./Source/helper/loadCommands');
 
 const commands = [];
 const commandsPath = path.join(__dirname, 'Source', 'commands');

@@ -11,7 +11,7 @@ const pool = mysql.createPool({
 });
 
 // Colonnes ajoutées à `User` pour stocker les infos du compte Wikideck (remplies via api.staff.findByDiscordId,
-// voir Source/Helper/userAccount.js). ALTER TABLE plutôt que CREATE pour ne pas perdre les lignes déjà en base.
+// voir Source/helper/userAccount.js). ALTER TABLE plutôt que CREATE pour ne pas perdre les lignes déjà en base.
 const USER_ACCOUNT_COLUMNS = [
 	{ name: 'wikideck_id', ddl: 'VARCHAR(36) NULL' },
 	{ name: 'wikideck_username', ddl: 'VARCHAR(255) NULL' },

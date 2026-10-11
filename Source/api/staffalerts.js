@@ -1,10 +1,10 @@
 const { EmbedBuilder } = require('discord.js');
-const { pool } = require('../Helper/database.js');
+const { pool } = require('../helper/database.js');
 const api = require('./wikideckApi.js');
 
 const CHECK_INTERVAL_MS = 60000;
 
-// La table staff_alert est créée au démarrage par initDatabase() (voir Source/Helper/database.js).
+// La table staff_alert est créée au démarrage par initDatabase() (voir Source/helper/database.js).
 
 async function isSeen(kind, id) {
     const [rows] = await pool.query('SELECT 1 FROM staff_alert WHERE kind = ? AND external_id = ?', [kind, id]);

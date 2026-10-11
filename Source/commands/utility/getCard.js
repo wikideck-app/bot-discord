@@ -1,7 +1,7 @@
 // debug helper
 const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, AttachmentBuilder } = require('discord.js');
-const api = require('../../Api/wikideckApi.js');
-const { generateCardImage } = require('../../Helper/cardImage.js');
+const api = require('../../api/wikideckApi.js');
+const { generateCardImage } = require('../../helper/cardImage.js');
 
 
 module.exports = {

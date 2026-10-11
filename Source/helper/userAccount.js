@@ -1,5 +1,5 @@
 const { pool } = require('./database.js');
-const api = require('../Api/wikideckApi.js');
+const api = require('../api/wikideckApi.js');
 
 /**
  * Crée ou met à jour la fiche d'un membre dans la table `User` à partir de son compte Discord,

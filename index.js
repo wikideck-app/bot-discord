@@ -3,8 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Events, GatewayIntentBits, Collection, MessageFlags } = require('discord.js');
 const { DISCORD_TOKEN: token } = require('dotenv').config().parsed;
-const { getCommandFiles } = require('./Source/Helper/loadCommands');
-const { initDatabase } = require('./Source/Helper/database');
+const { getCommandFiles } = require('./Source/helper/loadCommands');
+const { initDatabase } = require('./Source/helper/database');
 
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });

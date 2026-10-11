@@ -21,7 +21,7 @@ const TICKET_REPORT_ID = 'ticket:report';
 let TICKET_NUMBER_ID = null;
 const CLOSE_DELAY_MS = 5000;
 const MAX_TRANSCRIPT_MESSAGES = 1000;
-const TICKET_BANNER_PATH = path.join(__dirname, '..', 'Assets', 'ticket-banner.png');
+const TICKET_BANNER_PATH = path.join(__dirname, '..', 'assets', 'ticket-banner.png');
 
 function buildPanel() {
 
