@@ -63,11 +63,61 @@ const patch = (path, body) => request('PATCH', path, { body });
 const del = (path) => request('DELETE', path);
 
 
+const STAFF_USERS_MAX_PAGES = 50;
+
 const staff = {
 	bugReports: (query) => get('/staff/bug-reports', query),
 	reports: (query) => get('/staff/reports', query),
 	users: (query) => get('/staff/users', query),
 	audit: (query) => get('/staff/audit', query),
+
+	async allUsers() {
+		const users = [];
+		for (let page = 1; page <= STAFF_USERS_MAX_PAGES; page++) {
+			const result = await get('/staff/users', { page });
+			users.push(...(result?.users ?? []));
+			if (page >= (result?.totalPages ?? 1)) break;
+		}
+		return users;
+	},
+
+	// Il n'existe aucune route pour chercher un compte par ID Discord : /staff/users ignore les filtres
+	// qu'on lui passe, donc on parcourt les pages jusqu'à trouver une correspondance (ou épuisement).
+	async findByDiscordId(discordId) {
+		for (let page = 1; page <= STAFF_USERS_MAX_PAGES; page++) {
+			const result = await get('/staff/users', { page });
+			const match = (result?.users ?? []).find((user) => user.discordId === discordId);
+			if (match) return match;
+			if (page >= (result?.totalPages ?? 1)) break;
+		}
+		return null;
+	},
 };
 
-module.exports = { WikideckApiError, get, post, put, patch, del, staff };
+const players = {
+	profile: (id) => get(`/players/${id}/profile`),
+};
+
+const MARKET_MAX_PAGES = 10;
+
+const market = {
+	list: (query) => get('/market', query),
+
+	// /market n'a pas de filtre par carte : on parcourt les pages (24 enchères chacune) et on filtre côté bot.
+	async listAll({ maxPages = MARKET_MAX_PAGES, ...query } = {}) {
+		const auctions = [];
+		for (let page = 1; page <= maxPages; page++) {
+			const result = await get('/market', { ...query, page });
+			auctions.push(...(result?.auctions ?? []));
+			if (page >= (result?.totalPages ?? 1)) break;
+		}
+		return auctions;
+	},
+
+	async findByCardId(cardId) {
+		const auctions = await market.listAll({ sort: 'new' });
+		return auctions.filter((auction) => auction.card?.id === cardId && auction.status === 'ACTIVE');
+	},
+};
+
+module.exports = { WikideckApiError, get, post, put, patch, del, staff, players, market };

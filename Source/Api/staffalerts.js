@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { pool } = require('../Helper/database.js');
-const api = require('../Helper/wikideckApi.js');
+const api = require('./wikideckApi.js');
 
 const CHECK_INTERVAL_MS = 60000;
 

@@ -1,11 +1,19 @@
 const { Events, AttachmentBuilder } = require('discord.js');
 const { getWelcomeChannel } = require('../Helper/welcomeChannel');
 const { generateWelcomeImage } = require('../Helper/welcomeImage');
+const { syncUserAccount } = require('../Helper/userAccount');
 
 module.exports = {
 	name: Events.GuildMemberAdd,
 	once: false,
 	async execute(member) {
+		// Crée ou met à jour la fiche du membre dans la table `User`, indépendamment du message de bienvenue.
+		try {
+			await syncUserAccount(member.user);
+		} catch (error) {
+			console.error(`[ERROR] Synchronisation du compte de ${member.id} impossible :`, error);
+		}
+
 		if (!process.env.WELCOME_CHANNEL_ID) {
 			console.warn('[WARNING] WELCOME_CHANNEL_ID n\'est pas défini dans le fichier .env.');
 			return;

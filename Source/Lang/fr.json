@@ -2,6 +2,14 @@
 
 	"language.set": "La langue a été définie sur : {locale}",
 
+	"market.alert.title": "{title} est en vente !",
+	"market.alert.description": "Une carte de ta liste d'envies vient d'être mise aux enchères.",
+	"market.alert.currentBid": "Offre actuelle",
+	"market.alert.minBid": "Offre minimale",
+	"market.alert.seller": "Vendeur",
+	"market.alert.endsAt": "Fin",
+	"market.alert.price": "{amount} wikibits",
+
 
 	"ticket.created": "Ton ticket a été créé : {channel}",
 	"ticket.alreadyOpen": "Tu as déjà un ticket ouvert : {channel}",

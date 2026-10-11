@@ -1,6 +1,14 @@
 {
 
 	"language.set": "The language has been set to: {locale}",
+
+	"market.alert.title": "{title} is for sale!",
+	"market.alert.description": "A card from your wishlist was just put up for auction.",
+	"market.alert.currentBid": "Current bid",
+	"market.alert.minBid": "Minimum bid",
+	"market.alert.seller": "Seller",
+	"market.alert.endsAt": "Ends",
+	"market.alert.price": "{amount} wikibits",
 	
 
 	"ticket.created": "Your ticket has been created: {channel}",
