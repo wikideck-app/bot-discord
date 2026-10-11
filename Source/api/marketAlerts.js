@@ -1,7 +1,7 @@
 const { EmbedBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { pool } = require('../helper/database.js');
 const { t } = require('../helper/i18n.js');
-const { generateCardImage } = require('../helper/cardImage.js');
+const { generateCardImage, rarityStyle } = require('../helper/cardImage.js');
 const api = require('./wikideckApi.js');
 
 const CHECK_INTERVAL_MS = 60 * 1000;
@@ -129,11 +129,11 @@ async function releaseNotification(userId, auctionId) {
 	await pool.query('DELETE FROM market_notified WHERE user_id = ? AND auction_id = ?', [userId, auctionId]);
 }
 
-function auctionEmbed(auction, kind, locale, hasImage) {
+function auctionEmbed(auction, kind, locale) {
 	const { card } = auction;
 	const price = (amount) => t('market.alert.price', locale, { amount: String(amount) });
-	const embed = new EmbedBuilder()
-		.setColor(EMBED_COLOR)
+	return new EmbedBuilder()
+		.setColor(rarityStyle(card.rarity).color)
 		.setTitle(t(`market.${kind}.title`, locale, { title: card.title }))
 		.setDescription(t(`market.${kind}.description`, locale))
 		.addFields(
@@ -142,14 +142,12 @@ function auctionEmbed(auction, kind, locale, hasImage) {
 			{ name: t('market.alert.seller', locale), value: auction.seller?.username ?? 'n/a', inline: true },
 			{ name: t('market.alert.endsAt', locale), value: `<t:${Math.floor(new Date(auction.endsAt).getTime() / 1000)}:R>`, inline: true },
 		);
-	if (hasImage) embed.setImage('attachment://card.png');
-	return embed;
 }
 
 async function sendAuctionMessage(client, userId, locale, auction, kind, image) {
 	const user = await client.users.fetch(userId);
 	const payload = {
-		embeds: [auctionEmbed(auction, kind, locale, Boolean(image))],
+		embeds: [auctionEmbed(auction, kind, locale)],
 		components: [alertsButtonRow(true, locale)],
 	};
 	if (image) payload.files = [new AttachmentBuilder(image, { name: 'card.png' })];

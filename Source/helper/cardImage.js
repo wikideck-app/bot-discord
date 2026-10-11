@@ -1,14 +1,11 @@
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
-const fs = require('node:fs');
-const path = require('node:path');
 
-
-const TEMPLATE_PATH = path.join(__dirname, '..', 'assets', 'card-template.png');
-const DEFAULT_SIZE = { width: 680, height: 960 };
+const CARD_SIZE = { width: 680, height: 960 };
+const BACKGROUND_COLOR = '#0b0c14';
 
 const ZONES = {
 	// pastille de rareté
-	badge: { x: 58, y: 66, width: 64, height: 36, font: 'bold 22px sans-serif', textColor: '#ffffff' },
+	badge: { x: 58, y: 66, width: 64, height: 36, radius: 10, font: 'bold 22px sans-serif', textColor: '#14111c' },
 	// titre de la carte, la taille diminue automatiquement s'il est trop long
 	title: { x: 138, y: 84, maxWidth: 484, fontSize: 34, minFontSize: 20, fontFamily: 'sans-serif', color: '#ffffff' },
 	// illustration, recadrée pour remplir la zone
@@ -16,27 +13,29 @@ const ZONES = {
 	// mention de source en bas à droite de l'illustration (obligation légale)
 	credit: { text: 'Wikipédia · CC BY-SA', font: '16px sans-serif', margin: 8 },
 	// si le texte est trop long il est tronqué
-	description: { x: 64, y: 515, width: 552, height: 335, font: '26px serif', lineHeight: 38, color: '#f3dde6' },
+	description: { x: 64, y: 515, width: 552, height: 335, font: '26px serif', lineHeight: 38 },
 };
 
-// Couleur de la pastille par rareté
-const RARITY_COLORS = {
-	COMMON: '#8a94a6',
-	UNCOMMON: '#3fb97f',
-	RARE: '#3b82f6',
-	EPIC: '#a855f7',
-	LEGENDARY: '#f59e0b',
-	ULTRA_RARE: '#ff3d7f',
+const RARITIES = {
+	COMMON: { label: 'C', color: '#9ca3af' },
+	UNCOMMON: { label: 'PC', color: '#9ccc3d' },
+	RARE: { label: 'R', color: '#60a5fa' },
+	SUPER_RARE: { label: 'SR', color: '#c084fc' },
+	ULTRA_RARE: { label: 'UR', color: '#f87171' },
+	LEGENDARY: { label: 'L', color: '#f5a623' },
+	MYTHIC: { label: 'M', color: '#f2c94c', background: ['#2b2533', '#141119'] },
 };
-const DEFAULT_COLOR = '#ff3d7f';
+const UNKNOWN_RARITY = { label: '?', color: '#ff3d7f' };
 const IMAGE_TIMEOUT_MS = 8000;
 
-function rarityLabel(rarity) {
-	return String(rarity ?? '?')
-		.split('_')
-		.map((word) => word[0])
-		.join('')
-		.toUpperCase();
+function rarityStyle(rarity) {
+	return RARITIES[rarity] ?? UNKNOWN_RARITY;
+}
+
+function mixColors(color, other, weight) {
+	const channels = (hex) => [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16));
+	const [a, b] = [channels(color), channels(other)];
+	return `rgb(${a.map((value, index) => Math.round(value * weight + b[index] * (1 - weight))).join(', ')})`;
 }
 
 function wrapText(ctx, text, maxWidth) {
@@ -77,24 +76,17 @@ function drawCover(ctx, image, zone) {
 	ctx.drawImage(image, zone.x + (zone.width - width) / 2, zone.y + (zone.height - height) / 2, width, height);
 }
 
-/**
- * Template par défaut.
- * Sert à (re)générer l'image du template ; pour changer le design.
- */
-function renderDefaultTemplate() {
-	const { width, height } = DEFAULT_SIZE;
-	const canvas = createCanvas(width, height);
-	const ctx = canvas.getContext('2d');
+function drawFrame(ctx, rarity) {
+	const { width, height } = CARD_SIZE;
+	const { color } = rarity;
 	const frame = { x: 30, y: 30, width: width - 60, height: height - 60, radius: 38 };
-
-	ctx.fillStyle = '#0b0c14';
-	ctx.fillRect(0, 0, width, height);
+	const [top, bottom] = rarity.background ?? [mixColors(color, BACKGROUND_COLOR, 0.32), mixColors(color, BACKGROUND_COLOR, 0.12)];
 
 	const gradient = ctx.createLinearGradient(0, frame.y, 0, frame.y + frame.height);
-	gradient.addColorStop(0, '#5c1233');
-	gradient.addColorStop(1, '#3a0b22');
+	gradient.addColorStop(0, top);
+	gradient.addColorStop(1, bottom);
 	ctx.save();
-	ctx.shadowColor = DEFAULT_COLOR;
+	ctx.shadowColor = color;
 	ctx.shadowBlur = 40;
 	ctx.fillStyle = gradient;
 	ctx.beginPath();
@@ -103,7 +95,7 @@ function renderDefaultTemplate() {
 	ctx.restore();
 
 	ctx.lineWidth = 3;
-	ctx.strokeStyle = DEFAULT_COLOR;
+	ctx.strokeStyle = color;
 	ctx.beginPath();
 	ctx.roundRect(frame.x, frame.y, frame.width, frame.height, frame.radius);
 	ctx.stroke();
@@ -114,28 +106,26 @@ function renderDefaultTemplate() {
 	ctx.moveTo(frame.x + 28, frame.y + frame.height - 30);
 	ctx.lineTo(frame.x + frame.width - 28, frame.y + frame.height - 30);
 	ctx.stroke();
-
-	return canvas.encode('png');
 }
 
 async function generateCardImage(card) {
-	const template = await loadImage(fs.existsSync(TEMPLATE_PATH) ? TEMPLATE_PATH : await renderDefaultTemplate());
-	const canvas = createCanvas(template.width, template.height);
+	const canvas = createCanvas(CARD_SIZE.width, CARD_SIZE.height);
 	const ctx = canvas.getContext('2d');
-	ctx.drawImage(template, 0, 0);
+	const rarity = rarityStyle(card.rarity);
+	drawFrame(ctx, rarity);
 
 	const { badge, title: titleZone, image: imageZone, credit, description } = ZONES;
 	ctx.textBaseline = 'middle';
 
 	// Badge de rareté
-	ctx.fillStyle = RARITY_COLORS[card.rarity] ?? DEFAULT_COLOR;
+	ctx.fillStyle = rarity.color;
 	ctx.beginPath();
-	ctx.roundRect(badge.x, badge.y, badge.width, badge.height, badge.height / 2);
+	ctx.roundRect(badge.x, badge.y, badge.width, badge.height, badge.radius);
 	ctx.fill();
 	ctx.fillStyle = badge.textColor;
 	ctx.font = badge.font;
 	ctx.textAlign = 'center';
-	ctx.fillText(rarityLabel(card.rarity), badge.x + badge.width / 2, badge.y + badge.height / 2 + 1);
+	ctx.fillText(rarity.label, badge.x + badge.width / 2, badge.y + badge.height / 2 + 1);
 
 	// Titre
 	let title = String(card.title ?? '');
@@ -187,7 +177,7 @@ async function generateCardImage(card) {
 	const lines = wrapText(ctx, String(card.extract ?? card.description ?? ''), description.width);
 	const maxLines = Math.floor(description.height / description.lineHeight);
 	const truncated = lines.length > maxLines;
-	ctx.fillStyle = description.color;
+	ctx.fillStyle = mixColors(rarity.color, '#ffffff', 0.35);
 	lines.slice(0, maxLines).forEach((line, index, visible) => {
 		const fromEnd = visible.length - 1 - index;
 		ctx.globalAlpha = truncated && fromEnd < 2 ? (fromEnd === 0 ? 0.3 : 0.6) : 1;
@@ -198,4 +188,4 @@ async function generateCardImage(card) {
 	return canvas.encode('png');
 }
 
-module.exports = { generateCardImage, renderDefaultTemplate };
+module.exports = { generateCardImage, rarityStyle };
