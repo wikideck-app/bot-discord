@@ -8,6 +8,9 @@ const pool = mysql.createPool({
 	database: process.env.DB_NAME,
 	waitForConnections: true,
 	connectionLimit: 10,
+	// les user_id sont des snowflakes Discord (> 2^53) : sans ça mysql2 les relit en Number et les arrondit
+	supportBigNumbers: true,
+	bigNumberStrings: true,
 });
 
 // Colonnes ajoutées à `User` pour stocker les infos du compte Wikideck (remplies via api.staff.findByDiscordId,
