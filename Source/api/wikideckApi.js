@@ -81,8 +81,7 @@ const staff = {
 		return users;
 	},
 
-	// Il n'existe aucune route pour chercher un compte par ID Discord : /staff/users ignore les filtres
-	// qu'on lui passe, donc on parcourt les pages jusqu'à trouver une correspondance (ou épuisement).
+	// /staff/users ignore les filtres, il faut parcourir les pages
 	async findByDiscordId(discordId) {
 		for (let page = 1; page <= STAFF_USERS_MAX_PAGES; page++) {
 			const result = await get('/staff/users', { page });
@@ -103,7 +102,6 @@ const MARKET_MAX_PAGES = 10;
 const market = {
 	list: (query) => get('/market', query),
 
-	// /market n'a pas de filtre par carte : on parcourt les pages (24 enchères chacune) et on filtre côté bot.
 	async listAll({ maxPages = MARKET_MAX_PAGES, ...query } = {}) {
 		const auctions = [];
 		for (let page = 1; page <= maxPages; page++) {

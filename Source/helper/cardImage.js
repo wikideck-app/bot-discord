@@ -118,10 +118,6 @@ function renderDefaultTemplate() {
 	return canvas.encode('png');
 }
 
-/**
- * Génère l'image d'une carte à partir de l'objet `card` renvoyé par l'API
- * en remplissant les zones définies dans ZONES.
- */
 async function generateCardImage(card) {
 	const template = await loadImage(fs.existsSync(TEMPLATE_PATH) ? TEMPLATE_PATH : await renderDefaultTemplate());
 	const canvas = createCanvas(template.width, template.height);
