@@ -8,6 +8,7 @@ const CHECK_INTERVAL_MS = 60 * 1000;
 const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 const CANNOT_DM_CODE = 50007;
 const EMBED_COLOR = 0xFF3D7F;
+const SITE_URL = 'https://wikideck.app';
 const REFRESH_WISHLIST_ID = 'market:refresh';
 const DISABLE_ALERTS_ID = 'market:disable';
 const ENABLE_ALERTS_ID = 'market:enable';
@@ -144,14 +145,21 @@ function auctionEmbed(auction, kind, locale) {
 		);
 }
 
+function auctionMessage(auction, kind, locale, image) {
+	const auctionButton = new ButtonBuilder()
+		.setStyle(ButtonStyle.Link)
+		.setURL(`${SITE_URL}/market/${auction.id}`)
+		.setLabel(t('market.button.auction', locale));
+	const buttons = new ActionRowBuilder().addComponents(auctionButton, ...alertsButtonRow(true, locale).components);
+
+	const payload = { embeds: [auctionEmbed(auction, kind, locale)], components: [buttons] };
+	if (image) payload.files = [new AttachmentBuilder(image, { name: 'card.png' })];
+	return payload;
+}
+
 async function sendAuctionMessage(client, userId, locale, auction, kind, image) {
 	const user = await client.users.fetch(userId);
-	const payload = {
-		embeds: [auctionEmbed(auction, kind, locale)],
-		components: [alertsButtonRow(true, locale)],
-	};
-	if (image) payload.files = [new AttachmentBuilder(image, { name: 'card.png' })];
-	await user.send(payload);
+	await user.send(auctionMessage(auction, kind, locale, image));
 }
 
 async function getDiscordIdsByWikideckId() {
@@ -320,6 +328,7 @@ module.exports = {
 	startMarketAlerts,
 	syncWishlists,
 	checkMarket,
+	auctionMessage,
 	wishlistReply,
 	handleMarketButton,
 };

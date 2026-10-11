@@ -15,6 +15,7 @@
 
 	"market.intro.title": "Wishlist alerts",
 	"market.intro.description": "I'll send you a direct message as soon as a card from your Wikideck wishlist is put up for auction.\n\nYour Wikideck profile must be public so I can see your wishlist. You can turn these alerts off at any time with the button below.",
+	"market.button.auction": "View auction",
 	"market.button.refresh": "Refresh my wishlist",
 	"market.button.disable": "Turn off alerts",
 	"market.button.enable": "Turn alerts back on",
