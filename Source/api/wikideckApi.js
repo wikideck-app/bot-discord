@@ -81,7 +81,6 @@ const staff = {
 		return users;
 	},
 
-	// /staff/users ignore les filtres, il faut parcourir les pages
 	async findByDiscordId(discordId) {
 		for (let page = 1; page <= STAFF_USERS_MAX_PAGES; page++) {
 			const result = await get('/staff/users', { page });
