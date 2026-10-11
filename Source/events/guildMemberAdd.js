@@ -7,7 +7,7 @@ module.exports = {
 	name: Events.GuildMemberAdd,
 	once: false,
 	async execute(member) {
-		// Crée ou met à jour la fiche du membre dans la table `User`, indépendamment du message de bienvenue.
+		// Crée ou met à jour la fiche du membre dans la table User.
 		try {
 			await syncUserAccount(member.user);
 		} catch (error) {
