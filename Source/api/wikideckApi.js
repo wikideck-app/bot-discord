@@ -101,6 +101,7 @@ const MARKET_MAX_PAGES = 10;
 
 const market = {
 	list: (query) => get('/market', query),
+	get: (id) => get(`/market/${id}`),
 
 	async listAll({ maxPages = MARKET_MAX_PAGES, ...query } = {}) {
 		const auctions = [];

@@ -129,13 +129,13 @@ async function releaseNotification(userId, auctionId) {
 	await pool.query('DELETE FROM market_notified WHERE user_id = ? AND auction_id = ?', [userId, auctionId]);
 }
 
-function auctionEmbed(auction, locale, hasImage) {
+function auctionEmbed(auction, kind, locale, hasImage) {
 	const { card } = auction;
 	const price = (amount) => t('market.alert.price', locale, { amount: String(amount) });
 	const embed = new EmbedBuilder()
 		.setColor(EMBED_COLOR)
-		.setTitle(t('market.alert.title', locale, { title: card.title }))
-		.setDescription(t('market.alert.description', locale))
+		.setTitle(t(`market.${kind}.title`, locale, { title: card.title }))
+		.setDescription(t(`market.${kind}.description`, locale))
 		.addFields(
 			{ name: t('market.alert.currentBid', locale), value: price(auction.currentBid ?? auction.startPrice), inline: true },
 			{ name: t('market.alert.minBid', locale), value: price(auction.minBid ?? auction.startPrice), inline: true },
@@ -146,32 +146,35 @@ function auctionEmbed(auction, locale, hasImage) {
 	return embed;
 }
 
-async function sendAlert(client, watcher, auction, image) {
-	const user = await client.users.fetch(watcher.userId);
+async function sendAuctionMessage(client, userId, locale, auction, kind, image) {
+	const user = await client.users.fetch(userId);
 	const payload = {
-		embeds: [auctionEmbed(auction, watcher.locale, Boolean(image))],
-		components: [alertsButtonRow(true, watcher.locale)],
+		embeds: [auctionEmbed(auction, kind, locale, Boolean(image))],
+		components: [alertsButtonRow(true, locale)],
 	};
 	if (image) payload.files = [new AttachmentBuilder(image, { name: 'card.png' })];
 	await user.send(payload);
 }
 
-async function checkMarket(client) {
-	const watchers = await getWatchers();
-	if (watchers.size === 0) return;
+async function getDiscordIdsByWikideckId() {
+	const accounts = await api.staff.allUsers();
+	return new Map(accounts.filter((account) => account.discordId).map((account) => [account.id, account.discordId]));
+}
 
-	const auctions = await api.market.listAll({ sort: 'new' });
+async function alertWishlists(client, auctions, discordIds) {
+	const watchers = await getWatchers();
 	for (const auction of auctions) {
-		if (auction.status !== 'ACTIVE') continue;
 		const createdAt = new Date(auction.createdAt);
-		const cardWatchers = (watchers.get(auction.card?.id) ?? []).filter((watcher) => createdAt >= watcher.since);
+		const sellerId = discordIds.get(auction.seller?.id);
+		const cardWatchers = (watchers.get(auction.card?.id) ?? [])
+			.filter((watcher) => createdAt >= watcher.since && watcher.userId !== sellerId);
 
 		let image;
 		for (const watcher of cardWatchers) {
 			if (!(await claimNotification(watcher.userId, auction.id))) continue;
 			try {
 				if (image === undefined) image = await generateCardImage(auction.card).catch(() => null);
-				await sendAlert(client, watcher, auction, image);
+				await sendAuctionMessage(client, watcher.userId, watcher.locale, auction, 'alert', image);
 			} catch (error) {
 				if (error?.code === CANNOT_DM_CODE) continue;
 				await releaseNotification(watcher.userId, auction.id);
@@ -179,6 +182,50 @@ async function checkMarket(client) {
 			}
 		}
 	}
+}
+
+function outbidBidderIds(bids, newBidCount) {
+	const ranked = [...bids].sort((a, b) => b.amount - a.amount);
+	const outbid = new Set(ranked.slice(1, newBidCount + 1).map((bid) => bid.bidder.id));
+	outbid.delete(ranked[0]?.bidder.id);
+	return outbid;
+}
+
+let knownBidCounts = null;
+
+async function alertOutbids(client, auctions, discordIds) {
+	if (!knownBidCounts) {
+		knownBidCounts = new Map(auctions.map((auction) => [auction.id, auction.bidCount]));
+		return;
+	}
+
+	const [botUsers, subscriptions] = await Promise.all([getBotUsers(), getSubscriptions()]);
+	for (const auction of auctions) {
+		const newBidCount = auction.bidCount - (knownBidCounts.get(auction.id) ?? 0);
+		if (newBidCount > 0) {
+			const { bids = [] } = await api.market.get(auction.id);
+			let image;
+			for (const bidderId of outbidBidderIds(bids, newBidCount)) {
+				const userId = discordIds.get(bidderId);
+				const botUser = botUsers.get(userId);
+				if (!subscriptions.get(userId) || botUser?.isBanned) continue;
+				try {
+					if (image === undefined) image = await generateCardImage(auction.card).catch(() => null);
+					await sendAuctionMessage(client, userId, botUser?.locale, auction, 'outbid', image);
+				} catch (error) {
+					if (error?.code !== CANNOT_DM_CODE) console.error(`[ERROR] Alerte de surenchère impossible pour ${userId} :`, error.message ?? error);
+				}
+			}
+		}
+		knownBidCounts.set(auction.id, auction.bidCount);
+	}
+}
+
+async function checkMarket(client) {
+	const auctions = (await api.market.listAll({ sort: 'new' })).filter((auction) => auction.status === 'ACTIVE');
+	const discordIds = await getDiscordIdsByWikideckId();
+	await alertWishlists(client, auctions, discordIds);
+	await alertOutbids(client, auctions, discordIds);
 }
 
 function wishlistEmbed(visible, cards, locale) {
