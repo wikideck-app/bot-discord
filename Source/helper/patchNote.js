@@ -1,9 +1,14 @@
-const { EmbedBuilder, LabelBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, PermissionFlagsBits } = require('discord.js');
+const {
+	AttachmentBuilder, ContainerBuilder, LabelBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, ModalBuilder,
+	SeparatorBuilder, TextDisplayBuilder, TextInputBuilder, TextInputStyle, MessageFlags, PermissionFlagsBits,
+} = require('discord.js');
 const { t } = require('./i18n.js');
+const { generatePatchNoteBanner } = require('./patchNoteBanner.js');
 
 const PATCHNOTE_MODAL_PREFIX = 'patchnote:';
+const BANNER_FILE = 'patchnote.png';
 const TARGETS = {
-	site: { channelVariable: 'PATCHNOTE_SITE_CHANNEL_ID', color: 0xa65cf0 },
+	site: { channelVariable: 'PATCHNOTE_SITE_CHANNEL_ID', color: 0xe9b442 },
 	discord: { channelVariable: 'PATCHNOTE_DISCORD_CHANNEL_ID', color: 0x5865f2 },
 };
 
@@ -40,24 +45,34 @@ async function publishPatchNote(interaction) {
 		return;
 	}
 
+	await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+	const title = interaction.fields.getTextInputValue('title').trim();
 	const version = interaction.fields.getTextInputValue('version').trim();
+	const content = interaction.fields.getTextInputValue('content').trim();
 	const header = t('patchnote.header', undefined, { target: t(`patchnote.target.${targetName}`) });
-	const embed = new EmbedBuilder()
-		.setColor(target.color)
-		.setAuthor({ name: version ? `${header} · ${version}` : header })
-		.setTitle(interaction.fields.getTextInputValue('title').trim())
-		.setDescription(interaction.fields.getTextInputValue('content').trim())
-		.setFooter({ text: t('patchnote.footer', undefined, { user: interaction.user.username }) })
-		.setTimestamp();
+	const banner = await generatePatchNoteBanner({ target: targetName, title, version });
+
+	const container = new ContainerBuilder()
+		.setAccentColor(target.color)
+		.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder()
+			.setURL(`attachment://${BANNER_FILE}`)
+			.setDescription(`${version ? `${header} · ${version}` : header} — ${title}`)))
+		.addTextDisplayComponents(new TextDisplayBuilder().setContent(content))
+		.addSeparatorComponents(new SeparatorBuilder())
+		.addTextDisplayComponents(new TextDisplayBuilder().setContent(
+			`-# ${t('patchnote.footer', undefined, { user: interaction.user.username })} · <t:${Math.floor(Date.now() / 1000)}:f>`,
+		));
 
 	const roleId = process.env.PATCHNOTE_ROLE_ID;
+	const components = roleId ? [new TextDisplayBuilder().setContent(`<@&${roleId}>`), container] : [container];
 	const channel = await interaction.client.channels.fetch(channelId);
 	const message = await channel.send({
-		content: roleId ? `<@&${roleId}>` : undefined,
-		embeds: [embed],
+		flags: MessageFlags.IsComponentsV2,
+		components,
+		files: [new AttachmentBuilder(banner, { name: BANNER_FILE })],
 		allowedMentions: { parse: [], roles: roleId ? [roleId] : [] },
 	});
-	await replyPrivately(interaction, t('patchnote.published', undefined, { url: message.url }));
+	await interaction.editReply(t('patchnote.published', undefined, { url: message.url }));
 }
 
 module.exports = { PATCHNOTE_MODAL_PREFIX, buildPatchNoteModal, publishPatchNote };

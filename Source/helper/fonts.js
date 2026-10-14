@@ -12,5 +12,7 @@ const SERIF_FONT = 'WikiDeck Serif';
 
 GlobalFonts.registerFromPath(path.join(FONTS_DIR, 'Roboto.ttf'), SANS_FONT);
 GlobalFonts.registerFromPath(path.join(FONTS_DIR, 'PTSerif-Regular.ttf'), SERIF_FONT);
+GlobalFonts.registerFromPath(path.join(FONTS_DIR, 'Outfit.ttf'), 'Outfit');
+GlobalFonts.registerFromPath(path.join(FONTS_DIR, 'Newsreader.ttf'), 'Newsreader');
 
 module.exports = { SANS_FONT, SERIF_FONT };

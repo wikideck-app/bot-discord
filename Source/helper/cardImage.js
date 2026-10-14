@@ -1,11 +1,5 @@
-const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
-const fs = require('node:fs');
-const path = require('node:path');
-
-// polices embarquées : les serveurs Linux n'ont souvent aucune police installée
-const FONTS_DIR = path.join(__dirname, '..', 'assets', 'fonts');
-GlobalFonts.register(fs.readFileSync(path.join(FONTS_DIR, 'Outfit.ttf')), 'Outfit');
-GlobalFonts.register(fs.readFileSync(path.join(FONTS_DIR, 'Newsreader.ttf')), 'Newsreader');
+const { createCanvas, loadImage } = require('@napi-rs/canvas');
+require('./fonts.js');
 
 // dimensions de la charte graphique, rendues en x3
 const SCALE = 3;
