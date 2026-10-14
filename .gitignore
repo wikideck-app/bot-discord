@@ -9,3 +9,9 @@ config.json
 # Ignore la base de données locale (contient des données, pas du code)
 *.db
 *.db-journal
+
+# Ignore log files
+
+#ignore temp test files
+_tmp_font_test.js
+_tmp_font_test.png
