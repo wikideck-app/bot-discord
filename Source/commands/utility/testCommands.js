@@ -18,7 +18,7 @@ module.exports = {
 
         // On "defer" immédiatement : la génération de l'image (téléchargement de l'avatar + rendu canvas)
         // peut prendre plus de 3 secondes, le délai max pour accuser réception d'une interaction Discord.
-        // Sans ça, interaction.reply() échouerait avec "Unknown interaction" (code 10062).
+        // Sans ça, interaction.reply() échouerait avec "Unknown interaction".
         await interaction.deferReply({ ephemeral: true });
 
         try {
@@ -34,8 +34,6 @@ module.exports = {
             await interaction.editReply({ content: 'Commande de test de bienvenue exécutée !' });
         } catch (error) {
             console.error('[ERROR] Impossible d\'envoyer le message de bienvenue :', error);
-            // Si le token de l'interaction a quand même expiré, on log l'échec au lieu de laisser
-            // une erreur non gérée remonter et planter tout le bot.
             try {
                 await interaction.editReply({ content: 'Une erreur est survenue lors de l\'envoi du message de bienvenue.' });
             } catch (replyError) {
