@@ -14,7 +14,7 @@
 	"market.outbid.description": "Quelqu'un a fait une meilleure offre sur une enchère où tu étais en tête.",
 
 	"market.intro.title": "Alertes de ta liste d'envies",
-	"market.intro.description": "Je t'enverrai un message privé dès qu'une carte de ta liste d'envies Wikideck sera mise aux enchères.\n\nTon profil Wikideck doit être public pour que je puisse voir ta liste d'envies. Tu peux désactiver ces alertes à tout moment avec le bouton ci-dessous.",
+	"market.intro.description": "Je t'enverrai un message privé dès qu'une carte de ta liste d'envies Wikideck sera mise aux enchères, et quand quelqu'un surenchérira sur une enchère où tu es en tête.\n\nTu peux désactiver ces alertes à tout moment avec le bouton ci-dessous.",
 	"market.button.auction": "Voir l'enchère",
 	"market.button.refresh": "Mettre à jour ma liste d'envies",
 	"market.button.disable": "Désactiver les alertes",
@@ -24,7 +24,6 @@
 	"market.wishlist.title": "Ta liste d'envies",
 	"market.wishlist.cards": "{count} carte(s) suivie(s) :",
 	"market.wishlist.empty": "Ta liste d'envies est vide.",
-	"market.wishlist.private": "Ton profil Wikideck est privé, je ne peux pas voir ta liste d'envies.",
 	"market.wishlist.notLinked": "Ton compte Discord n'est lié à aucun compte Wikideck.",
 	"market.wishlist.disabled": "Tes alertes sont désactivées.",
 

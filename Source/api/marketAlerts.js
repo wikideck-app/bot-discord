@@ -79,7 +79,13 @@ async function saveWishlist(userId, cardIds) {
 }
 
 async function syncWishlists(client) {
-	const [accounts, botUsers, subscriptions] = await Promise.all([getLinkedAccounts(client), getBotUsers(), getSubscriptions()]);
+	const [accounts, botUsers, subscriptions, wishlists] = await Promise.all([
+		getLinkedAccounts(client),
+		getBotUsers(),
+		getSubscriptions(),
+		api.staff.allWishlists(),
+	]);
+	const cardIdsByUser = new Map(wishlists.map((entry) => [entry.discordId, entry.cards.map((card) => card.id)]));
 
 	const watchedUserIds = [];
 	for (const account of accounts) {
@@ -94,12 +100,7 @@ async function syncWishlists(client) {
 		if (!subscriptions.get(userId)) continue;
 
 		watchedUserIds.push(userId);
-		try {
-			const profile = await api.players.profile(account.id);
-			await saveWishlist(userId, profile.visible ? profile.wishlist.map((card) => card.id) : []);
-		} catch (error) {
-			console.error(`[ERROR] Synchro de la liste d'envies de ${userId} :`, error.message ?? error);
-		}
+		await saveWishlist(userId, cardIdsByUser.get(userId) ?? []);
 	}
 
 	if (watchedUserIds.length === 0) {
@@ -234,16 +235,10 @@ async function checkMarket(client) {
 	await alertOutbids(client, auctions, discordIds);
 }
 
-function wishlistEmbed(visible, cards, locale) {
-	let description;
-	if (!visible) {
-		description = t('market.wishlist.private', locale);
-	} else if (cards.length === 0) {
-		description = t('market.wishlist.empty', locale);
-	} else {
-		const lines = cards.map((card) => `• ${card.title}`);
-		description = [t('market.wishlist.cards', locale, { count: String(cards.length) }), ...lines].join('\n');
-	}
+function wishlistEmbed(cards, locale) {
+	const description = cards.length === 0
+		? t('market.wishlist.empty', locale)
+		: [t('market.wishlist.cards', locale, { count: String(cards.length) }), ...cards.map((card) => `• ${card.title}`)].join('\n');
 	return new EmbedBuilder().setColor(EMBED_COLOR).setTitle(t('market.wishlist.title', locale)).setDescription(description);
 }
 
@@ -258,10 +253,9 @@ async function wishlistReply(userId) {
 		return { content: t('market.wishlist.disabled', locale), components: [alertsButtonRow(false, locale)] };
 	}
 
-	const profile = await api.players.profile(account.id);
-	const cards = profile.visible ? profile.wishlist : [];
+	const cards = await api.staff.wishlist(userId);
 	await saveWishlist(userId, cards.map((card) => card.id));
-	return { embeds: [wishlistEmbed(profile.visible, cards, locale)], components: [alertsButtonRow(true, locale)] };
+	return { embeds: [wishlistEmbed(cards, locale)], components: [alertsButtonRow(true, locale)] };
 }
 
 async function setAlertsEnabled(userId, enabled) {

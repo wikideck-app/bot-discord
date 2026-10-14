@@ -63,7 +63,19 @@ const patch = (path, body) => request('PATCH', path, { body });
 const del = (path) => request('DELETE', path);
 
 
-const STAFF_USERS_MAX_PAGES = 50;
+const MAX_CURSOR_PAGES = 50;
+
+async function getAllPages(path, key, limit) {
+	const items = [];
+	let after;
+	for (let page = 0; page < MAX_CURSOR_PAGES; page++) {
+		const result = await get(path, { limit, after });
+		items.push(...(result?.[key] ?? []));
+		after = result?.next;
+		if (!after) break;
+	}
+	return items;
+}
 
 const staff = {
 	bugReports: (query) => get('/staff/bug-reports', query),
@@ -71,24 +83,17 @@ const staff = {
 	users: (query) => get('/staff/users', query),
 	audit: (query) => get('/staff/audit', query),
 
-	async allUsers() {
-		const users = [];
-		for (let page = 1; page <= STAFF_USERS_MAX_PAGES; page++) {
-			const result = await get('/staff/users', { page });
-			users.push(...(result?.users ?? []));
-			if (page >= (result?.totalPages ?? 1)) break;
-		}
-		return users;
-	},
+	allUsers: () => getAllPages('/staff/users/sync', 'users', 500),
+	allWishlists: () => getAllPages('/staff/wishlists', 'wishlists', 200),
 
 	async findByDiscordId(discordId) {
-		for (let page = 1; page <= STAFF_USERS_MAX_PAGES; page++) {
-			const result = await get('/staff/users', { page });
-			const match = (result?.users ?? []).find((user) => user.discordId === discordId);
-			if (match) return match;
-			if (page >= (result?.totalPages ?? 1)) break;
-		}
-		return null;
+		const result = await get('/staff/users', { q: discordId });
+		return (result?.users ?? []).find((user) => user.discordId === discordId) ?? null;
+	},
+
+	async wishlist(discordId) {
+		const result = await get('/staff/wishlists', { discordId });
+		return result?.wishlists?.[0]?.cards ?? [];
 	},
 };
 
