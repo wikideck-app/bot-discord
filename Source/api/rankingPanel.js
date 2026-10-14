@@ -86,13 +86,17 @@ async function deletePanelMessage(client, panel) {
 	}
 }
 
+async function savePanel(guildId, channelId, messageId) {
+	await pool.query(
+		'INSERT INTO ranking_panel (guild_id, channel_id, message_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE channel_id = ?, message_id = ?',
+		[guildId, channelId, messageId, channelId, messageId],
+	);
+}
+
 async function postPanel(client, channel) {
 	const [[previous]] = await pool.query('SELECT channel_id, message_id FROM ranking_panel WHERE guild_id = ?', [channel.guildId]);
 	const message = await channel.send(buildRankingMessage(await fetchRankings()));
-	await pool.query(
-		'INSERT INTO ranking_panel (guild_id, channel_id, message_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE channel_id = ?, message_id = ?',
-		[channel.guildId, channel.id, message.id, channel.id, message.id],
-	);
+	await savePanel(channel.guildId, channel.id, message.id);
 	if (previous) await deletePanelMessage(client, previous);
 	return message;
 }
@@ -106,7 +110,14 @@ async function refreshPanels(client) {
 		try {
 			const channel = await client.channels.fetch(panel.channel_id);
 			const message = await channel.messages.fetch(panel.message_id);
-			await message.edit(payload);
+			if (message.flags.has(MessageFlags.IsComponentsV2)) {
+				await message.edit(payload);
+			} else {
+				// Discord refuse de convertir un ancien panneau à embeds : on le remplace
+				const replacement = await channel.send(payload);
+				await savePanel(panel.guild_id, channel.id, replacement.id);
+				await message.delete();
+			}
 		} catch (error) {
 			if (GONE_CODES.has(error?.code)) {
 				await pool.query('DELETE FROM ranking_panel WHERE guild_id = ?', [panel.guild_id]);
