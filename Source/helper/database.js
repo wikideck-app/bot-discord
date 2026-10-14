@@ -98,6 +98,14 @@ async function initDatabase() {
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
 	`);
+	await pool.query(`
+		CREATE TABLE IF NOT EXISTS ranking_panel (
+			guild_id BIGINT NOT NULL PRIMARY KEY,
+			channel_id BIGINT NOT NULL,
+			message_id BIGINT NOT NULL,
+			updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+		);
+	`);
 }
 
 module.exports = { pool, initDatabase };

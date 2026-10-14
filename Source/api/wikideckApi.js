@@ -123,4 +123,9 @@ const market = {
 	},
 };
 
-module.exports = { WikideckApiError, get, post, put, patch, del, staff, players, market };
+const ranking = {
+	players: (board) => get('/ranking', { board }),
+	guilds: () => get('/guild/ranking'),
+};
+
+module.exports = { WikideckApiError, get, post, put, patch, del, staff, players, market, ranking };
