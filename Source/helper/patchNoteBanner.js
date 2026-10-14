@@ -1,7 +1,10 @@
-const { createCanvas } = require('@napi-rs/canvas');
+const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const path = require('node:path');
 require('./fonts.js');
 const { t } = require('./i18n.js');
 
+const LOGO_PATH = path.join(__dirname, '..', '..', 'assets', 'image', 'logo.webp');
+const LOGO_SIZE = 64;
 const WIDTH = 1200;
 const HEIGHT = 400;
 const MARGIN = 72;
@@ -40,6 +43,20 @@ function wrapTitle(ctx, title, maxWidth, maxLines) {
 	return kept;
 }
 
+const measureContext = createCanvas(1, 1).getContext('2d');
+const TITLE_SIZES = [{ size: 68, maxLines: 2 }, { size: 58, maxLines: 3 }, { size: 50, maxLines: 3 }];
+
+function layoutTitle(title, maxWidth) {
+	for (const { size, maxLines } of TITLE_SIZES) {
+		setFont(measureContext, size, 800);
+		const lines = wrapTitle(measureContext, title, maxWidth, Infinity);
+		if (lines.length <= maxLines) return { size, lines };
+	}
+	const { size, maxLines } = TITLE_SIZES.at(-1);
+	setFont(measureContext, size, 800);
+	return { size, lines: wrapTitle(measureContext, title, maxWidth, maxLines) };
+}
+
 function drawDecor(ctx, accent) {
 	const glow = ctx.createRadialGradient(1010, 70, 0, 1010, 70, 520);
 	glow.addColorStop(0, withAlpha(accent, 0.3));
@@ -56,47 +73,73 @@ function drawDecor(ctx, accent) {
 	}
 }
 
+function formatVersion(version) {
+	const trimmed = String(version ?? '').trim();
+	return /^\d/.test(trimmed) ? `v${trimmed}` : trimmed;
+}
+
+function drawHeading(ctx, accent, target, title, maxWidth) {
+	const label = t('patchnote.banner.label', undefined, { target: t(`patchnote.target.${target}`).toUpperCase() });
+	const { size, lines } = layoutTitle(title, maxWidth);
+	const lineHeight = Math.round(size * 1.15);
+	const top = (HEIGHT - (44 + lines.length * lineHeight)) / 2;
+
+	ctx.textAlign = 'left';
+	ctx.textBaseline = 'top';
+	setFont(ctx, 26, 800);
+	ctx.fillStyle = accent;
+	ctx.fillText(label, MARGIN, top);
+
+	setFont(ctx, size, 800);
+	ctx.fillStyle = '#ffffff';
+	lines.forEach((line, index) => ctx.fillText(line, MARGIN, top + 44 + index * lineHeight));
+}
+
+function drawVersion(ctx, accent, version) {
+	let size = 128;
+	setFont(ctx, size, 800);
+	while (ctx.measureText(version).width > 320 && size > 56) setFont(ctx, --size, 800);
+	const top = (HEIGHT - (36 + size)) / 2;
+
+	ctx.textAlign = 'right';
+	ctx.textBaseline = 'top';
+	ctx.fillStyle = accent;
+	ctx.fillText(version, WIDTH - MARGIN, top + 36);
+
+	setFont(ctx, 24, 800);
+	ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+	ctx.fillText(t('patchnote.banner.version'), WIDTH - MARGIN, top);
+}
+
 async function generatePatchNoteBanner({ target, title, version }) {
 	const accent = ACCENTS[target] ?? ACCENTS.site;
+	const displayedVersion = formatVersion(version);
 	const canvas = createCanvas(WIDTH, HEIGHT);
 	const ctx = canvas.getContext('2d');
 	ctx.fillStyle = BACKGROUND;
 	ctx.fillRect(0, 0, WIDTH, HEIGHT);
 	drawDecor(ctx, accent);
 
-	ctx.textBaseline = 'alphabetic';
-	setFont(ctx, 26, 800);
-	ctx.fillStyle = accent;
-	ctx.fillText(t('patchnote.banner.label', undefined, { target: t(`patchnote.target.${target}`).toUpperCase() }), MARGIN, 104);
+	drawHeading(ctx, accent, target, title, displayedVersion ? 640 : 900);
+	if (displayedVersion) drawVersion(ctx, accent, displayedVersion);
 
-	setFont(ctx, 68, 800);
-	ctx.fillStyle = '#ffffff';
-	const lines = wrapTitle(ctx, title, 780, 2);
-	lines.forEach((line, index) => ctx.fillText(line, MARGIN, 190 + index * 78));
-
-	if (version) {
-		setFont(ctx, 26, 700);
-		const pillWidth = ctx.measureText(version).width + 40;
-		const pillY = 190 + lines.length * 78 - 30;
-		ctx.beginPath();
-		ctx.roundRect(MARGIN, pillY, pillWidth, 46, 23);
-		ctx.fillStyle = withAlpha(accent, 0.14);
-		ctx.fill();
-		ctx.strokeStyle = accent;
-		ctx.lineWidth = 2.5;
-		ctx.stroke();
-		ctx.fillStyle = accent;
-		ctx.textBaseline = 'middle';
-		ctx.fillText(version, MARGIN + 20, pillY + 24);
-		ctx.textBaseline = 'alphabetic';
-	}
-
-	setFont(ctx, 30, 800);
-	ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-	ctx.textAlign = 'right';
-	ctx.fillText('Wikideck', WIDTH - 56, HEIGHT - 44);
-
+	await drawBrand(ctx);
 	return canvas.encode('png');
 }
 
-module.exports = { generatePatchNoteBanner };
+let logo;
+async function drawBrand(ctx) {
+	logo ??= loadImage(LOGO_PATH);
+	const centerY = HEIGHT - 40 - LOGO_SIZE / 2;
+
+	setFont(ctx, 30, 800);
+	ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+	ctx.textAlign = 'right';
+	ctx.textBaseline = 'middle';
+	ctx.fillText('Wikideck', WIDTH - 56, centerY);
+
+	const logoX = WIDTH - 56 - ctx.measureText('Wikideck').width - 12 - LOGO_SIZE;
+	ctx.drawImage(await logo, logoX, centerY - LOGO_SIZE / 2, LOGO_SIZE, LOGO_SIZE);
+}
+
+module.exports = { generatePatchNoteBanner, formatVersion, layoutTitle };

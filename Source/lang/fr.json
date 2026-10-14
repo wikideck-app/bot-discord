@@ -49,6 +49,7 @@
 
 	"patchnote.header": "Patch note — {target}",
 	"patchnote.banner.label": "PATCH NOTE · {target}",
+	"patchnote.banner.version": "VERSION",
 	"patchnote.target.site": "Site",
 	"patchnote.target.discord": "Discord",
 	"patchnote.field.title": "Titre",

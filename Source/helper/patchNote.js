@@ -3,7 +3,7 @@ const {
 	SeparatorBuilder, TextDisplayBuilder, TextInputBuilder, TextInputStyle, MessageFlags, PermissionFlagsBits,
 } = require('discord.js');
 const { t } = require('./i18n.js');
-const { generatePatchNoteBanner } = require('./patchNoteBanner.js');
+const { generatePatchNoteBanner, formatVersion } = require('./patchNoteBanner.js');
 
 const PATCHNOTE_MODAL_PREFIX = 'patchnote:';
 const BANNER_FILE = 'patchnote.png';
@@ -56,7 +56,7 @@ async function publishPatchNote(interaction) {
 		.setAccentColor(target.color)
 		.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder()
 			.setURL(`attachment://${BANNER_FILE}`)
-			.setDescription(`${version ? `${header} · ${version}` : header} — ${title}`)))
+			.setDescription(`${version ? `${header} · ${formatVersion(version)}` : header} — ${title}`)))
 		.addTextDisplayComponents(new TextDisplayBuilder().setContent(content))
 		.addSeparatorComponents(new SeparatorBuilder())
 		.addTextDisplayComponents(new TextDisplayBuilder().setContent(
