@@ -44,6 +44,17 @@
 	"ranking.empty": "Nobody is ranked yet.",
 	"ranking.footer": "Public profiles only · refreshed every 5 minutes",
 	"ranking.posted": "The rankings panel is posted, it will refresh every 5 minutes.",
+
+	"patchnote.header": "Patch note — {target}",
+	"patchnote.target.site": "Website",
+	"patchnote.target.discord": "Discord",
+	"patchnote.field.title": "Title",
+	"patchnote.field.version": "Version (optional)",
+	"patchnote.field.content": "Content",
+	"patchnote.footer": "Posted by {user}",
+	"patchnote.published": "Patch note posted: {url}",
+	"patchnote.noChannel": "No channel is set for this patch note: fill in {variable} in the .env file.",
+	"patchnote.forbidden": "Only administrators can post a patch note.",
 	
 
 	"ticket.created": "Your ticket has been created: {channel}",

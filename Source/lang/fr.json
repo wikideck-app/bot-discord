@@ -45,6 +45,17 @@
 	"ranking.footer": "Profils publics uniquement · mis à jour toutes les 5 minutes",
 	"ranking.posted": "Le panneau des classements est publié, il se mettra à jour toutes les 5 minutes.",
 
+	"patchnote.header": "Patch note — {target}",
+	"patchnote.target.site": "Site",
+	"patchnote.target.discord": "Discord",
+	"patchnote.field.title": "Titre",
+	"patchnote.field.version": "Version (facultatif)",
+	"patchnote.field.content": "Contenu",
+	"patchnote.footer": "Publié par {user}",
+	"patchnote.published": "Patch note publiée : {url}",
+	"patchnote.noChannel": "Aucun salon n'est configuré pour cette patch note : renseigne {variable} dans le fichier .env.",
+	"patchnote.forbidden": "Seuls les administrateurs peuvent publier une patch note.",
+
 
 	"ticket.created": "Ton ticket a été créé : {channel}",
 	"ticket.alreadyOpen": "Tu as déjà un ticket ouvert : {channel}",
